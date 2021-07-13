@@ -1,0 +1,39 @@
+- name: Check config nginx templates folder exists
+  file:
+    path: ~/config/nginx/templates
+    state: directory
+
+- name: Copy docker-gen template
+  get_url:
+    url: https://raw.githubusercontent.com/jwilder/docker-gen/master/templates/nginx.tmpl
+    dest: ~/config/nginx/templates/nginx.tmpl
+    mode: 0644
+
+- name: NGINX
+  docker_container:
+    name: nginx
+    image: nginx
+    state: started
+    restart: yes
+    restart_policy: always
+    container_default_behavior: no_defaults
+    volumes:
+      - ~/config/nginx:/etc/nginx/conf.d
+    ports:
+      - 80:80
+      - 443:443
+
+- name: NGINX gen
+  docker_container:
+    name: nginx-gen
+    image: jwilder/docker-gen
+    state: started
+    restart: yes
+    restart_policy: always
+    container_default_behavior: no_defaults
+    volumes_from:
+      - nginx
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ~/config/nginx/templates:/etc/docker-gen/templates
+    command: -notify-sighup nginx -watch -only-exposed /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf

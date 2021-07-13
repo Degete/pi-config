@@ -1,0 +1,62 @@
+- name: Remove old packages
+  become: yes
+  apt:
+    name: "{{ packages }}"
+    state: absent
+  vars:
+    packages:
+      - docker
+      - docker-engine
+      - docker.io
+      - containerd
+      - runc
+
+- name: Install requirements
+  become: yes
+  apt:
+    name: "{{ packages }}"
+    state: latest
+  vars:
+    packages:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+
+- name: Add Docker GPG key
+  become: yes
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker repository
+  become: yes
+  apt_repository:
+    repo: deb [arch=arm64] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable
+
+- name: Install Docker
+  become: yes
+  apt:
+    name: "{{ packages }}"
+    state: latest
+  vars:
+    packages:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+
+- name: Ensure Docker daemon
+  become: yes
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Add docker group to ubuntu
+  become: yes
+  user:
+    name: ubuntu
+    groups:
+      - docker
+    append: yes

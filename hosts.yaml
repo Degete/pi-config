@@ -1,0 +1,7 @@
+all:
+  hosts:
+    pi:
+      ansible_user: ubuntu
+      ansible_host: ubuntu
+      vars:
+        pretty_name: Ubuntu Server 20.04 LTS (Raspberry Pi 4 8GB)

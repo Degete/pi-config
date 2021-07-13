@@ -1,0 +1,50 @@
+- name: Check config bind9 bind folder exists
+  file:
+    path: ~/config/bind9/bind
+    state: directory
+
+- name: Check config bind9 cache folder exists
+  file:
+    path: ~/config/bind9/cache
+    state: directory
+
+- name: Check config bind9 lib folder exists
+  file:
+    path: ~/config/bind9/lib
+    state: directory
+
+- name: Check config bind9 log folder exists
+  file:
+    path: ~/config/bind9/log
+    state: directory
+
+- name: Copy Dockerfile
+  copy:
+    src: ./Dockerfile
+    dest: ~/config/bind9/Dockerfile
+    mode: 0644
+
+- name: Build BIND image for arm64
+  docker_image:
+    name: bind9-arm64:9.16
+    build:
+      path: ~/config/bind9/
+    source: build
+    state: present
+
+- name: BIND
+  docker_container:
+    name: dns
+    image: bind9-arm64:9.16
+    state: started
+    restart: yes
+    restart_policy: always
+    container_default_behavior: no_defaults
+    volumes:
+      - ~/config/bind9/bind:/etc/bind
+      - ~/config/bind9/cache:/var/cache/bind
+      - ~/config/bind9/lib:/var/lib/bind
+      - ~/config/bind9/log:/var/log
+    ports:
+      - 53:53
+      - 127.0.0.1:953:953/tcp

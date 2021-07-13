@@ -1,0 +1,8 @@
+- hosts:
+    - pi
+  roles:
+    - { role: 'packages', tags: 'packages' }
+    - { role: 'docker', tags: 'docker' }
+    - { role: 'docker-compose', tags: 'docker-compose' }
+    - { role: 'dns', tags: 'dns' }
+    - { role: 'nginx', tags: 'nginx' }
