@@ -1,0 +1,11 @@
+- name: Grafana
+  become: yes
+  docker_container:
+    name: grafana
+    image: grafana/grafana
+    container_default_behavior: no_defaults
+    env:
+      VIRTUAL_HOST: 'grafana.degete.lan'
+      VIRTUAL_PORT: '3000'
+    # ports:
+    #   - 3000:3000

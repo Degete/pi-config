@@ -1,0 +1,16 @@
+- name: Node exporter
+  become: yes
+  docker_container:
+    name: node-exporter
+    image: prom/node-exporter-linux-arm64
+    state: started
+    restart: yes
+    restart_policy: always
+    container_default_behavior: no_defaults
+    command: --path.rootfs=/host
+    pid_mode: host
+    network_mode: host
+    volumes:
+      - /:/host:ro,rslave
+    # ports:
+    #   - 9090:9090

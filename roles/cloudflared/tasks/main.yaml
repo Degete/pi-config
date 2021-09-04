@@ -1,0 +1,11 @@
+- name: Cloudflared Docker
+  become: yes
+  docker_compose:
+    definition:
+      version: '3'
+      services:
+        cloudflared:
+          container_name: cloudflared
+          build: https://github.com/cloudflare/cloudflared.git
+          restart: unless-stopeed
+          command: proxy-dns
