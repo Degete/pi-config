@@ -1,15 +1,20 @@
-- name: Check config nginx templates folder exists
+- name: Check nginx directories exists
+  become: yes
   file:
-    path: ~/config/nginx/templates
+    path: "{{ item }}"
     state: directory
+  loop:
+    - ~/config/nginx/templates
 
 - name: Copy docker-gen template
+  become: yes
   get_url:
     url: https://raw.githubusercontent.com/jwilder/docker-gen/master/templates/nginx.tmpl
     dest: ~/config/nginx/templates/nginx.tmpl
     mode: 0644
 
 - name: NGINX
+  become: yes
   docker_container:
     name: nginx
     image: nginx
@@ -24,6 +29,7 @@
       - 443:443
 
 - name: NGINX gen
+  become: yes
   docker_container:
     name: nginx-gen
     image: jwilder/docker-gen

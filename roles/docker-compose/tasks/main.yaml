@@ -1,13 +1,16 @@
-- name: Check .docker config folder exists
+- name: Check docker directories exists
   become: yes
   file:
-    path: ~/.docker/cli-plugins
+    path: "{{ item }}"
     state: directory
+  loop:
+    - ~/.docker/cli-plugins
+
 - name: Install Docker compose
   become: yes
   get_url:
-    url: https://github.com/docker/compose-cli/releases/download/{{ version }}/docker-compose-{{ ansible_facts['system'] }}-arm64
-    dest: ~/.docker/cli-plugins/docker-compose
+    url: https://github.com/docker/compose/releases/download/{{ version }}/docker-compose-{{ ansible_facts['system'] }}-aarch64
+    dest: /usr/libexec/docker/cli-plugins/docker-compose
     mode: 0755
   vars:
-    version: v2.0.0-beta.6
+    version: v2.3.3

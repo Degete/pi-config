@@ -1,0 +1,29 @@
+- name: Verify adguard folders exists
+  become: yes
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - ~/config/adguard/work
+    - ~/config/adguard/conf
+
+- name: AdGuard Docker
+  become: yes
+  docker_container:
+    name: adguard
+    image: adguard/adguardhome
+    state: started
+    restart: yes
+    restart_policy: always
+    container_default_behavior: no_defaults
+    volumes:
+      - ~/config/adguard/work:/opt/adguardhome/work
+      - ~/config/adguard/conf:/opt/adguardhome/conf
+    ports:
+      - 53:53
+      - 80/tcp
+      - 67:67/udp
+      - 68:68
+      - 443/tcp
+      - 853/tcp
+      - 3000/tcp

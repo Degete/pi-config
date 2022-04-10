@@ -1,30 +1,68 @@
-- name: Check config bind9 bind folder exists
-  file:
-    path: ~/config/bind9/bind
-    state: directory
+- name: Check if resolv.conf.bkp exist
+  become: yes
+  stat:
+    path: /etc/resolv.conf.bkp
+  register: resolv_backup
 
-- name: Check config bind9 cache folder exists
-  file:
-    path: ~/config/bind9/cache
-    state: directory
+- name: Make resolv.conf backup
+  become: yes
+  command: mv /etc/resolv.conf /etc/resolv.conf.bkp
+  when: not resolv_backup.stat.exists
 
-- name: Check config bind9 lib folder exists
+- name: Make resolv.conf symlink
+  become: yes
   file:
-    path: ~/config/bind9/lib
-    state: directory
+    src: /run/systemd/resolve/resolv.conf
+    path: /etc/resolv.conf
+    state: link
 
-- name: Check config bind9 log folder exists
+- name: Check if systemd-resolved service is running
+  become: yes
+  service:
+    name: systemd-resolved.service
+    state: stopped
+    enabled: no
+
+- name: Check bind9 directories exists
+  become: yes
   file:
-    path: ~/config/bind9/log
+    path: "{{ item }}"
     state: directory
+  loop:
+    - ~/config/bind9/bind
+    - ~/config/bind9/cache
+    - ~/config/bind9/lib
+    - ~/config/bind9/log
 
 - name: Copy Dockerfile
+  become: yes
   copy:
-    src: ./Dockerfile
+    src: Dockerfile
     dest: ~/config/bind9/Dockerfile
     mode: 0644
 
+- name: Copy config files
+  become: yes
+  copy:
+    src: "bind/{{ item }}"
+    dest: "~/config/bind9/bind/{{ item }}"
+    mode: 0644
+  loop:
+    - named.conf.local
+    - named.conf.options
+
+- name: Copy DNS db
+  become: yes
+  template:
+    src: "{{ item }}"
+    dest: "~/config/bind9/bind/{{ item }}"
+    mode: 0644
+  loop:
+    - db.degete.lan
+    - db.192.168
+
 - name: Build BIND image for arm64
+  become: yes
   docker_image:
     name: bind9-arm64:9.16
     build:
@@ -33,6 +71,7 @@
     state: present
 
 - name: BIND
+  become: yes
   docker_container:
     name: dns
     image: bind9-arm64:9.16
@@ -40,11 +79,16 @@
     restart: yes
     restart_policy: always
     container_default_behavior: no_defaults
+    user: bind:bind
+    command: /usr/sbin/named -g -c /etc/bind/named.conf -u bind
     volumes:
-      - ~/config/bind9/bind:/etc/bind
+      - ~/config/bind9/bind/named.conf.local:/etc/bind/named.conf.local
+      - ~/config/bind9/bind/db.degete.lan:/etc/bind/db.degete.lan
+      - ~/config/bind9/bind/db.192.168:/etc/bind/db.192.168
       - ~/config/bind9/cache:/var/cache/bind
       - ~/config/bind9/lib:/var/lib/bind
       - ~/config/bind9/log:/var/log
     ports:
-      - 53:53
+      - 53:53/udp
+      - 53:53/tcp
       - 127.0.0.1:953:953/tcp

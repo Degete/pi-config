@@ -1,0 +1,8 @@
+- name: Grafana
+  become: yes
+  docker_container:
+    name: grafana
+    image: grafana/grafana
+    container_default_behavior: no_defaults
+    ports:
+      - 3000:3000

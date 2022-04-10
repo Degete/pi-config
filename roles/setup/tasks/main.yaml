@@ -1,0 +1,141 @@
+- name: disk info
+  become: yes
+  parted:
+    device: "{{disk}}"
+    unit: MiB
+  register: disk_info
+  when: ansible_os_family != 'Darwin'
+
+- name: unmount partitions
+  become: yes
+  shell: "if findmnt {{disk}}{{item.num}}; then umount {{disk}}{{item.num}}; fi"
+  loop: "{{ disk_info.partitions }}"
+  when: ansible_os_family != 'Darwin'
+
+- name: Umount disk
+  shell: "diskutil umountDisk {{disk}}"
+  when: ansible_os_family == 'Darwin'
+
+- name: directory for mounting
+  become: yes
+  tempfile:
+    state: directory
+    suffix: mnt
+  register: mntdir
+  when: ansible_os_family != 'Darwin'
+
+- name: Get OS image
+  become: yes
+  get_url:
+    dest: "{{ mntdir.path }}/pi-os.img.xz"
+    url: "{{ os_url }}"
+    checksum: "{{ checksum_url }}"
+  when: ansible_os_family != 'Darwin'
+
+- name: Check if OS image exist
+  stat:
+    path: ./pi-os.img.xz
+  register: os_image
+  when: ansible_os_family == 'Darwin'
+
+- name: Get OS image
+  get_url:
+    dest: ./pi-os.img.xz
+    url: "{{ os_url }}"
+    checksum: "{{ checksum_url }}"
+  when: ansible_os_family == 'Darwin' and not os_image.stat.exists
+
+- name: Write OS image
+  become: yes
+  shell: "xzcat '{{ mntdir.path }}/pi-os.img.xz' | dd bs=4M of={{disk}} conv=fsync; partprobe {{disk}}"
+  args:
+    warn: false
+  when: ansible_os_family != 'Darwin'
+
+- name: Write OS image
+  become: yes
+  shell: "xzcat ./pi-os.img.xz | dd bs=1m of={{disk}}"
+  args:
+    warn: false
+  when: ansible_os_family == 'Darwin'
+
+- name: temp fstab
+  become: yes
+  tempfile:
+    state: file
+    suffix: fstab
+  register: fstab
+  when: ansible_os_family != 'Darwin'
+
+- name: mount parition 2 (root)
+  become: yes
+  mount:
+    path: "{{mntdir.path}}"
+    src: "{{disk}}2"
+    fstype: ext4
+    state: mounted
+    fstab: "{{fstab.path}}"
+  when: ansible_os_family != 'Darwin'
+
+# - name: Mount disk
+#   shell: "diskutil mountDisk {{disk}}"
+#   when: ansible_os_family == 'Darwin'
+
+- name: root ssh dir
+  become: yes
+  file:
+    path: "{{mntdir.path}}/root/.ssh/"
+    owner: root
+    group: root
+    state: directory
+    mode: '0700'
+  when: ansible_os_family != 'Darwin'
+
+- name: add authorized keys to root
+  become: yes
+  get_url:
+    url: "{{ keys_url }}"
+    dest: "{{mntdir.path}}/root/.ssh/authorized_keys"
+    owner: root
+    group: root
+    mode: '0400'
+  when: ansible_os_family != 'Darwin'
+
+- name: umount parition 2 (root)
+  become: yes
+  mount:
+    path: "{{mntdir.path}}"
+    src: "{{disk}}2"
+    state: unmounted
+    fstab: "{{fstab.path}}"
+  when: ansible_os_family != 'Darwin'
+
+- name: cleanup temps
+  become: yes
+  file:
+    path: "{{item}}"
+    state: absent
+  loop:
+    - "{{fstab.path}}"
+    - "{{mntdir.path}}/pi-os.img.xz"
+    - "{{mntdir.path}}"
+  when: ansible_os_family != 'Darwin'
+
+- name: Enable ssh
+  copy:
+    src: "{{ item }}"
+    dest: "/Volumes/system-boot/{{ item }}"
+    mode: 777
+  loop:
+    - ssh
+  when: ansible_os_family == 'Darwin'
+
+- name: Copy config files
+  template:
+    src: "{{ item }}"
+    dest: "/Volumes/system-boot/{{ item }}"
+    mode: 777
+  loop:
+    - network-config
+    - user-data
+  when: ansible_os_family == 'Darwin'

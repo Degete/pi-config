@@ -1,0 +1,4 @@
+*.retry
+.env
+docker
+pi-os.img.xz

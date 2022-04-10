@@ -1,20 +1,26 @@
 - name: Install common packages
   become: yes
   apt:
-    name: "{{ packages }}"
+    name: "{{ item }}"
     state: latest
-  vars:
-    packages:
-      - curl
-      - git
-      - jq
-      - python3
-      - python3-docker
-      - python3-pip
-      - python3-setuptools
-      - python3-venv
-      - screen
-      - tmux
-      - vim
-      - wget
-      - zsh
+  loop:
+    - acl
+    - build-essential
+    - ack
+    - bat
+    - curl
+    - fish
+    - fzf
+    - git
+    - htop
+    - jq
+    - neovim
+    - python3
+    - python3-pip
+    - python3-setuptools
+    - python3-venv
+    - screen
+    - tmux
+    - vim
+    - wget
+    - zsh

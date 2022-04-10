@@ -1,28 +1,26 @@
 - name: Remove old packages
   become: yes
   apt:
-    name: "{{ packages }}"
+    name: "{{ item }}"
     state: absent
-  vars:
-    packages:
-      - docker
-      - docker-engine
-      - docker.io
-      - containerd
-      - runc
+  loop:
+    - docker
+    - docker-engine
+    - docker.io
+    - containerd
+    - runc
 
 - name: Install requirements
   become: yes
   apt:
-    name: "{{ packages }}"
+    name: "{{ item }}"
     state: latest
-  vars:
-    packages:
-      - apt-transport-https
-      - ca-certificates
-      - curl
-      - gnupg
-      - lsb-release
+  loop:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg
+    - lsb-release
 
 - name: Add Docker GPG key
   become: yes
@@ -38,13 +36,12 @@
 - name: Install Docker
   become: yes
   apt:
-    name: "{{ packages }}"
+    name: "{{ item }}"
     state: latest
-  vars:
-    packages:
-      - docker-ce
-      - docker-ce-cli
-      - containerd.io
+  loop:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
 
 - name: Ensure Docker daemon
   become: yes
@@ -52,6 +49,15 @@
     name: docker
     state: started
     enabled: yes
+  notify:
+    - Restart Docker
+
+- name: Docker modules for Ansible
+  become: yes
+  pip:
+    name:
+      - docker
+      - docker-compose
 
 - name: Add docker group to ubuntu
   become: yes

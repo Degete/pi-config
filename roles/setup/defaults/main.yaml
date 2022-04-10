@@ -1,0 +1,4 @@
+---
+os_url: "https://cdimage.ubuntu.com/releases/21.10/release/ubuntu-21.10-preinstalled-server-arm64+raspi.img.xz"
+checksum_url: "sha256:126f940d3b270a6c1fc5a183ac8a3d193805fead4f517296a7df9d3e7d691a03"
+keys_url:  "https://github.com/degete.keys"

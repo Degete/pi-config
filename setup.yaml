@@ -1,0 +1,36 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+    - name: disks
+      shell: lsblk -o NAME,SIZE --nodeps
+      register: disks
+      when: ansible_os_family != "Darwin"
+
+- hosts: localhost
+  connection: local
+  tasks:
+    - name: Select disk
+      shell: diskutil list external
+      register: disks
+      when: ansible_os_family == "Darwin"
+
+- hosts: localhost
+  connection: local
+  roles:
+    - { role: 'setup', tags: 'setup' }
+  vars_prompt:
+    - name: disk
+      prompt: "Disks:\n{{hostvars['localhost']['disks'].stdout}}\nSelect (add /dev/(r)disk for faster speed)"
+      private: no
+    - name: ip
+      prompt: "Set IP"
+      private: no
+    - name: username
+      prompt: "Set username"
+      private: no
+    - name: password
+      prompt: "Set password"
+  pre_tasks:
+    - set_fact:
+        disk: "{{ (disk is abs) | ternary('', '/dev/') }}{{disk}}"

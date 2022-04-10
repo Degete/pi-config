@@ -1,8 +1,13 @@
 - hosts:
     - pi
   roles:
-    - { role: 'packages', tags: 'packages' }
-    - { role: 'docker', tags: 'docker' }
-    - { role: 'docker-compose', tags: 'docker-compose' }
-    - { role: 'dns', tags: 'dns' }
-    - { role: 'nginx', tags: 'nginx' }
+    # - { role: 'packages', tags: 'packages' }
+    # - { role: 'docker', tags: 'docker' }
+    # - { role: 'docker-compose', tags: 'docker-compose' }
+    # - { role: 'dns', tags: 'dns' }
+    # - { role: 'nginx', tags: 'nginx' }
+    # - { role: 'cloudflared', tags: 'cloudflared' }
+    # - { role: 'prometheus', tags: 'prometheus' }
+    # - { role: 'node-exporter', tags: 'node-exporter' }
+    # - { role: 'grafana', tags: 'grafana' }
+    # - { role: 'adguard', tags: 'adguard' }

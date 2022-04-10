@@ -1,0 +1,21 @@
+- name: Check prometheus directories exists
+  become: yes
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - ~/config/prometheus
+
+- name: Prometheus
+  become: yes
+  docker_container:
+    name: prometheus
+    image: prom/prometheus-linux-arm64
+    state: started
+    restart: yes
+    restart_policy: always
+    container_default_behavior: no_defaults
+    volumes:
+      - ~/config/prometheus:/etc/prometheus
+    ports:
+      - 9090:9090

@@ -1,7 +1,14 @@
 all:
   hosts:
+    vars:
+      domain: degete.lan
     pi:
       ansible_user: ubuntu
-      ansible_host: ubuntu
+      ansible_host: 192.168.3.14
       vars:
         pretty_name: Ubuntu Server 20.04 LTS (Raspberry Pi 4 8GB)
+        ip: 192.168.3.14
+        cnames:
+          - "grafana.{{ domain }}"
+          - "prometheus.{{ domain }}"
+          - "adguard.{{ domain }}"
